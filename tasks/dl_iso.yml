@@ -1,0 +1,67 @@
+---
+- name: Check to see if CentOS {{ centos_version }} DVD1 ISO already exists
+  stat:
+    path: "/var/lib/libvirt/boot/CentOS-{{ centos_version }}-x86_64-dvd1.iso"
+    checksum_algorithm: sha256
+    get_checksum: true
+  register: stat_result
+
+- name: Checksum Check
+  assert:
+    that: stat_result.stat.checksum == '{{ sha256sum_centos_dvd1 }}'
+    fail_msg: "[-] ERROR: SHA256SUM Doesn't match - remove offending file"
+    success_msg: "[+] SHA256SUM Matches"
+  when: stat_result.stat.exists
+
+- name: Download CentOS {{ centos_version }} DVD1 ISO
+  get_url:
+    url: "{{ url_kernel_org }}{{ centos_version }}/isos/x86_64/CentOS-{{ centos_version }}-x86_64-dvd1.iso"
+    dest: /var/lib/libvirt/boot/
+    checksum: "sha256:{{ sha256sum_centos_dvd1 }}"
+  async: 1800  #30 minute timeout
+  poll: 0
+  register: dl_sleeper
+  when: not stat_result.stat.exists
+
+- name: Downloading ISO - Checking if Job is Finished
+  async_status:
+    jid: "{{ dl_sleeper.ansible_job_id }}"
+  register: job_result 
+  until: job_result.finished
+  retries: 60  
+  delay: 30 
+  when: not stat_result.stat.exists
+
+- name: Check to see if CentOS {{ centos_version }} MINIMAL ISO already exists
+  stat:
+    path: "/var/lib/libvirt/boot/CentOS-{{ centos_version }}-x86_64-minimal.iso"
+    checksum_algorithm: sha256
+    get_checksum: true
+  register: stat_result
+
+- name: Checksum Check 
+  assert:
+    that: stat_result.stat.checksum == '{{ sha256sum_centos_minimal }}'
+    fail_msg: "[-] ERROR: SHA256SUM Doesn't match - remove offending file"
+    success_msg: "[+] SHA256SUM Matches"
+  when: stat_result.stat.exists
+
+- name: Download Centos {{ centos_version }} MINIMAL ISO
+  get_url:
+    url: "{{ url_kernel_org }}{{ centos_version }}/isos/x86_64/CentOS-{{ centos_version }}-x86_64-minimal.iso"
+    dest: /var/lib/libvirt/boot
+    checksum: "sha256:{{ sha256sum_centos_minimal }}"
+  async: 1800   #30 minute timeout
+  poll: 0
+  register: dl_sleeper
+  when: not stat_result.stat.exists
+
+- name: Downloading ISO - Check if Job is Finished
+  async_status:
+    jid: "{{ dl_sleeper.ansible_job_id }}"
+  register: job_result
+  until: job_result.finished
+  retries: 60
+  delay: 30
+  when: not stat_result.stat.exists
+

@@ -1,0 +1,4 @@
+---
+- include_tasks: pre-checks.yml
+- include_tasks: install.yml
+- include_tasks: dl_iso.yml

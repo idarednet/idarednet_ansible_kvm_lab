@@ -1,0 +1,19 @@
+---
+- name: Execute lscpu
+  command: lscpu
+  register: lscpu_result
+  changed_when: false
+
+- name: Validate Virtualization Support
+  assert:
+    that: "'VT-x' in lscpu_result.stdout"
+    fail_msg: "[-] ERROR: NO VT-x - This machine does not support Virtualization Check BIOS Settings"
+    success_msg: "[+] Virtualization is Supported"
+
+- name: Check for 60GB of Free Space Availability
+  assert:
+    that: item.size_available > 60000000000
+    fail_msg: "[-] ERROR: Not enough free space on {{ mount_device }}"
+    success_msg: "[+] Sufficient free space is availabled on {{ mount_device }}"
+  when: item.device == mount_device
+  with_items: "{{ ansible_mounts }}"

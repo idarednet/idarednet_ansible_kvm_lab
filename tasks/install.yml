@@ -1,0 +1,17 @@
+---
+- name: Install KVM packages
+  yum:
+    name: "{{ kvm_packages }}"
+    state: present
+
+- name: Start and Enabled libvirtd service
+  service:
+    name: libvirtd
+    state: started
+    enabled: true
+
+- name: Check that KVM kernel module loaded
+  modprobe:
+    name: kvm
+    state: present
+
